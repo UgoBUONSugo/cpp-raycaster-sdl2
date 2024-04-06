@@ -29,6 +29,8 @@ public:
 	void RunLoop();
 	// Shutdown the game
 	void Shutdown();
+	void DrawMap();
+	void DrawPlayer();
 private:
 	// Helper functions for the game loop
 	void ProcessInput();

@@ -1,23 +1,17 @@
-// ----------------------------------------------------------------
-// From Game Programming in C++ by Sanjay Madhav
-// Copyright (C) 2017 Sanjay Madhav. All rights reserved.
-// 
-// Released under the BSD License
-// See LICENSE in root directory for full details.
-// ----------------------------------------------------------------
-
+#include <math.h>
 #include "Game.h"
+#define PI 3.1415926535
 
 const int thickness = 15;
-float px, py;
+float px, py, pdx, pdy, pa;
 
 int mapX = 8, mapY = 8, mapS = 64;
 const int map[] =
 {
 	1,1,1,1,1,1,1,1,
-	1,0,0,0,0,0,0,1,
-	1,0,0,0,0,0,0,1,
-	1,0,0,0,0,0,0,1,
+	1,0,0,0,0,1,0,1,
+	1,0,0,1,0,1,0,1,
+	1,0,0,1,1,1,0,1,
 	1,0,0,0,0,0,0,1,
 	1,0,0,0,0,0,0,1,
 	1,0,0,0,0,0,0,1,
@@ -72,10 +66,51 @@ bool Game::Initialize()
 		return false;
 	}
 
-	//Initialize player position
-	px = 300; py = 300;
+	//Initialize player position and angle
+	px = 300; py = 300; pdx = cos(pa)*5; pdy = sin(pa)*5;
 
 	return true;
+}
+
+void Game::DrawMap() {
+	int x, y, x0, y0;
+	for (y = 0; y < mapY; y++) {
+		for (x = 0; x < mapX; x++) {      //Wall Color												//Floor Color 
+			if (map[y * mapX + x] == 1) { SDL_SetRenderDrawColor(mRenderer, 0, 155, 255, 255); } else { SDL_SetRenderDrawColor(mRenderer, 110, 110, 110, 255); }
+			x0 = x * mapS; y0 = y * mapS;
+			SDL_Rect wall = { x0 +2, y0 +2, mapS -2, mapS -2};
+			SDL_RenderFillRect(mRenderer, &wall);
+		}
+	}
+}
+
+void Game::DrawPlayer() {
+	//Set player color
+	SDL_SetRenderDrawColor(
+		mRenderer,
+		255, // R
+		255, // G
+		60, // B
+		255 // A
+	);
+
+	//Draw player
+	SDL_Rect player{
+		px,
+		py,
+		12,
+		12
+	};
+	SDL_RenderFillRect(mRenderer, &player);
+
+	SDL_SetRenderDrawColor(
+		mRenderer,
+		255, // R
+		0, // G
+		0, // B
+		255 // A
+	);
+	SDL_RenderDrawLine(mRenderer, px+6, py, px+pdx*5, py+pdy*5);
 }
 
 void Game::RunLoop()
@@ -83,7 +118,7 @@ void Game::RunLoop()
 	while (mIsRunning)
 	{
 		ProcessInput();
-		UpdateGame();
+		//UpdateGame();
 		GenerateOutput();
 	}
 }
@@ -112,20 +147,20 @@ void Game::ProcessInput()
 
 	else if (state[SDL_SCANCODE_W])
 	{
-		py -= 3;
+		px += pdx; py += pdy;
 	}
 	else if (state[SDL_SCANCODE_S])
 	{
-		py += 3;
+		px -= pdx; py -= pdy;
 	}
 
 	else if (state[SDL_SCANCODE_D])
 	{
-		px += 3;
+		pa += 0.1; if (pa > 2*PI) { pa -= 2 * PI; } pdx = cos(pa)*5; pdy = sin(pa)*5;
 	}
 	else if (state[SDL_SCANCODE_A])
 	{
-		px -= 3;
+		pa -= 0.1; if (pa < 0) {pa += 2 * PI;} pdx = cos(pa)*5; pdy = sin(pa)*5;
 	}
 }
 
@@ -147,24 +182,8 @@ void Game::GenerateOutput()
 	// Clear back buffer
 	SDL_RenderClear(mRenderer);
 
-	//Set player color
-	SDL_SetRenderDrawColor(
-		mRenderer,
-		255, // R
-		255, // G
-		60, // B
-		255 // A
-	);
-	
-	//Draw player
-	SDL_Rect player{
-		px,
-		py,
-		8,
-		8
-	};
-	SDL_RenderFillRect(mRenderer, &player);
-
+	DrawMap();
+	DrawPlayer();
 
 	// Swap front buffer and back buffer
 	SDL_RenderPresent(mRenderer);

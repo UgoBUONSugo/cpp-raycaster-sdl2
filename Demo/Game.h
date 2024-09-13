@@ -31,6 +31,7 @@ public:
 	void Shutdown();
 	void DrawMap();
 	void DrawPlayer();
+	void RayCaster();
 private:
 	// Helper functions for the game loop
 	void ProcessInput();

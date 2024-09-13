@@ -1,6 +1,9 @@
 #include <math.h>
+#include <iostream>
 #include "Game.h"
 #define PI 3.1415926535
+#define PI2 PI/2
+#define PI3 3 * PI/2
 
 const int thickness = 15;
 float px, py, pdx, pdy, pa;
@@ -72,6 +75,44 @@ bool Game::Initialize()
 	return true;
 }
 
+void Game::RayCaster() {
+	int r, mx, my, mp, dof; float rx, ry, ra, xo, yo;
+	ra = pa;
+	for(r = 0; r < 1; r++)
+	{
+		//Check for horizontal lines
+		/*dof = 0;
+		float aTan = -1 / tan(ra);
+		if (ra > PI) { ry = (((int)py >> 6) << 6) - 0.0001; rx = (py - ry) * aTan + px; yo = -64; xo = -yo * aTan; } //looking up
+		if (ra < PI) { ry = (((int)py >> 6) << 6) + 64; rx = (py - ry) * aTan + px; yo = 64; xo = yo * aTan; } //looking down
+		if (ra == 0 || ra == PI) { rx = px; ry = py; dof = 8; }
+		while(dof < 8)
+		{
+			mx = (int)(rx) >> 6; my = (int)(ry) >> 6; mp = my * mapX + mx;
+			if (mp < mapX * mapY && map[mp] == 1) { dof = 8; } //Hit wall
+			else { rx += xo; ry += yo; dof += 1; } //Next line
+		}
+
+		SDL_RenderDrawLine(mRenderer, px, py, rx, ry);*/
+
+		//Check for vertical lines
+		dof = 0;
+		float nTan = -tan(ra);
+		rx = px;
+		if (ra > PI2 && ra < PI3) { rx = (((int)px >> 6) << 6) - 0.0001; ry = (px - rx) * nTan + py; xo = -64; yo = -xo * nTan; } //looking left
+		if (ra < PI2 || ra > PI3) { ry = (((int)py >> 6) << 6) + 64; rx = (px - rx) * nTan + py; yo = 64; yo = -xo * nTan; } //looking right
+		if (ra == 0 || ra == PI) { rx = px; ry = py; dof = 8; }
+		while (dof < 8)
+		{
+			mx = (int)(rx) >> 6; my = (int)(ry) >> 6; mp = my * mapX + mx;
+			if (mp < mapX * mapY && map[mp] == 1) { dof = 8; } //Hit wall
+			else { rx += xo; ry += yo; dof += 1; } //Next line
+		}
+
+		SDL_RenderDrawLine(mRenderer, px, py, rx, ry);
+	}
+}
+
 void Game::DrawMap() {
 	int x, y, x0, y0;
 	for (y = 0; y < mapY; y++) {
@@ -110,7 +151,7 @@ void Game::DrawPlayer() {
 		0, // B
 		255 // A
 	);
-	SDL_RenderDrawLine(mRenderer, px+6, py, px+pdx*5, py+pdy*5);
+	SDL_RenderDrawLine(mRenderer, px, py, px+pdx*5, py+pdy*5);
 }
 
 void Game::RunLoop()
@@ -184,6 +225,7 @@ void Game::GenerateOutput()
 
 	DrawMap();
 	DrawPlayer();
+	RayCaster();
 
 	// Swap front buffer and back buffer
 	SDL_RenderPresent(mRenderer);
